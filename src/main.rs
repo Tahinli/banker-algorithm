@@ -31,7 +31,6 @@ fn main() {
     let mut max_needs_matrix = [[0_u8;RESOURCE_COUNT];PROCESS_COUNT];
     let mut assigned_resources_matrix = [[0_u8;RESOURCE_COUNT];PROCESS_COUNT];
     let mut info:(bool, Vec<u8>) = (false, Vec::with_capacity(PROCESS_COUNT));
-    let mut count:u128 = 0;
     while !info.0
         {
             for i in 0..PROCESS_COUNT
@@ -77,9 +76,7 @@ fn main() {
                         }
                 }
             info = banker(a, b, c, max_needs_matrix, assigned_resources_matrix);
-            count += 1;
         }
-        println!("Count = {}", count);
         println!("Max Needs Matrix");
         print_matrix(max_needs_matrix);
         println!("Assigned Resources Matrix");
