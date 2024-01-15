@@ -5,109 +5,185 @@ const PROCESS_COUNT:usize = 5;
 const RESOURCE_COUNT:usize = 3;
 fn main() {
     println!("Hello, world!");
-    
-    println!("Max A Resource");
-    let mut a:String = String::new();
-    io::stdin().read_line(&mut a).unwrap();
-    let a:u8 = a.trim().parse().unwrap();
 
-	println!("Max B Resource");
-    let mut b:String = String::new();
-    io::stdin().read_line(&mut b).unwrap();
-   	let b:u8 = b.trim().parse().unwrap();
-
-	println!("Max C Resource");
-   	let mut c:String = String::new();
-    io::stdin().read_line(&mut c).unwrap();
-    let c:u8 = c.trim().parse().unwrap();
-
-    println!("\n\tA = {}\n\tB = {}\n\tC = {}", a,b,c);
-    if a <= 0 || b <= 0 || c <= 0
+    let mut restart:bool = true;
+    while restart
         {
-            println!("Exit: Zero as a Input Invalid");
-            return;
-        }
+            println!("Max A Resource");
+            let a:u8;
+            let b:u8;
+            let c:u8;
+            let mut resource_input:String = String::new();
+            if let Err(err_val) = io::stdin().read_line(&mut resource_input)
+                {
+                    println!("Failed to Read: {}", err_val);
+                    return;
+                }
+            match resource_input.trim().parse::<u8>()
+                {
+                    Ok(value) =>
+                        {
+                            a = value;
+                        }
+                    Err(err_val) =>
+                        {
+                            println!("Failed to Convert: {}", err_val);
+                            return;
+                        }
+                }
 
-    let mut max_needs_matrix = [[0_u8;RESOURCE_COUNT];PROCESS_COUNT];
-    let mut assigned_resources_matrix = [[0_u8;RESOURCE_COUNT];PROCESS_COUNT];
-    let mut info:(bool, Vec<u8>) = (false, Vec::with_capacity(PROCESS_COUNT));
-    while !info.0
-        {
+            println!("Max B Resource");
+            let mut resource_input:String = String::new();
+            if let Err(err_val) = io::stdin().read_line(&mut resource_input)
+                {
+                    println!("Failed to Read: {}", err_val);
+                    return;
+                }
+            match resource_input.trim().parse::<u8>()
+                {
+                    Ok(value) =>
+                        {
+                            b = value;
+                        }
+                    Err(err_val) =>
+                        {
+                            println!("Failed to Convert: {}", err_val);
+                            return;
+                        }
+                }
+
+            println!("Max C Resource");
+            let mut resource_input:String = String::new();
+            if let Err(err_val) = io::stdin().read_line(&mut resource_input)
+                {
+                    println!("Failed to Read: {}", err_val);
+                    return;
+                }
+            match resource_input.trim().parse::<u8>()
+                {
+                    Ok(value) =>
+                        {
+                            c = value;
+                        }
+                    Err(err_val) =>
+                        {
+                            println!("Failed to Convert: {}", err_val);
+                            return;
+                        }
+                }
+                
+
+            println!("\n\tA = {}\n\tB = {}\n\tC = {}", a,b,c);
+            if a == 0 || b == 0 || c == 0
+                {
+                    println!("Exit: Zero as a Input Invalid");
+                    return;
+                }
+
+            let mut max_needs_matrix = [[0_u8;RESOURCE_COUNT];PROCESS_COUNT];
+            let mut assigned_resources_matrix = [[0_u8;RESOURCE_COUNT];PROCESS_COUNT];
+            let mut info:(bool, Vec<u8>) = (false, Vec::with_capacity(PROCESS_COUNT));
+            while !info.0
+                {
+                    for i in 0..PROCESS_COUNT
+                        {
+                            let mut rng = rand::thread_rng();
+                            let random = rng.gen_range(0..a);
+                            max_needs_matrix[i][0] = random;
+                            if random != 0
+                                {
+                                    assigned_resources_matrix[i][0] = rng.gen_range(0..random);
+                                }
+                            else 
+                                {
+                                    assigned_resources_matrix[i][0] = 0;
+                                }
+                        }
+                    for i in 0..PROCESS_COUNT
+                        {
+                            let mut rng = rand::thread_rng();
+                            let random = rng.gen_range(0..b);
+                            max_needs_matrix[i][1] = random;
+                            if random != 0
+                                {
+                                    assigned_resources_matrix[i][1] = rng.gen_range(0..random);
+                                }
+                            else
+                                {
+                                    assigned_resources_matrix[i][1] = 0;
+                                }
+                        }
+                    for i in 0..PROCESS_COUNT
+                        {
+                            let mut rng = rand::thread_rng();
+                            let random = rng.gen_range(0..c);
+                            max_needs_matrix[i][2] = random;
+                            if random != 0
+                                {
+                                    assigned_resources_matrix[i][2] = rng.gen_range(0..random);
+                                }
+                            else
+                                {
+                                    assigned_resources_matrix[i][2] = 0;
+                                }
+                        }
+                    info = banker(a, b, c, max_needs_matrix, assigned_resources_matrix);
+                }
+            println!("Max Needs Matrix");
+            print_matrix(max_needs_matrix);
+            println!("Assigned Resources Matrix");
+            print_matrix(assigned_resources_matrix);
+            let mut answers:[u8;PROCESS_COUNT] = [0;PROCESS_COUNT];
             for i in 0..PROCESS_COUNT
                 {
-                    let mut rng = rand::thread_rng();
-                    let random = rng.gen_range(0..a);
-                    max_needs_matrix[i][0] = random;
-                    if random != 0
+                    println!("Which Process Should be Done Now ?");
+                    let mut input = String::new();
+                    io::stdin().read_line(&mut input).unwrap();
+                    let input:u8 = input.trim().parse().unwrap();
+                    answers[i] = input;
+                    if info.1[i] == input
                         {
-                            assigned_resources_matrix[i][0] = rng.gen_range(0..random);
+                            println!("Correct");
                         }
                     else 
                         {
-                            assigned_resources_matrix[i][0] = 0;
+                            println!("Wrong it should be = {}", info.1[i]);
                         }
                 }
+            println!("Your Answers");
             for i in 0..PROCESS_COUNT
                 {
-                    let mut rng = rand::thread_rng();
-                    let random = rng.gen_range(0..b);
-                    max_needs_matrix[i][1] = random;
-                    if random != 0
-                        {
-                            assigned_resources_matrix[i][1] = rng.gen_range(0..random);
-                        }
-                    else
-                        {
-                            assigned_resources_matrix[i][1] = 0;
-                        }
+                    println!("P{}", answers[i]);
                 }
+            println!("Correct Answers");
             for i in 0..PROCESS_COUNT
                 {
-                    let mut rng = rand::thread_rng();
-                    let random = rng.gen_range(0..c);
-                    max_needs_matrix[i][2] = random;
-                    if random != 0
+                    println!("P{}", info.1[i]);
+                }
+
+            
+            let mut resource_input:String = String::new();
+            println!("Press 'r' to Restart");
+            if let Err(err_val) = io::stdin().read_line(&mut resource_input)
+                {
+                    println!("Failed to Read: {}", err_val);
+                    return;
+                }
+            resource_input = resource_input.trim().to_string();
+            match resource_input.as_str()
+                {
+                    "r" =>
                         {
-                            assigned_resources_matrix[i][2] = rng.gen_range(0..random);
+                            restart = true;
+                            println!("-------------------------------");
                         }
-                    else
+                    _ =>
                         {
-                            assigned_resources_matrix[i][2] = 0;
+                            return;
                         }
                 }
-            info = banker(a, b, c, max_needs_matrix, assigned_resources_matrix);
+                    
         }
-        println!("Max Needs Matrix");
-        print_matrix(max_needs_matrix);
-        println!("Assigned Resources Matrix");
-        print_matrix(assigned_resources_matrix);
-        let mut answers:[u8;PROCESS_COUNT] = [0;PROCESS_COUNT];
-        for i in 0..PROCESS_COUNT
-            {
-                println!("Which Process Should be Done Now ?");
-                let mut input = String::new();
-                io::stdin().read_line(&mut input).unwrap();
-                let input:u8 = input.trim().parse().unwrap();
-                answers[i] = input;
-                if info.1[i] == input
-                    {
-                        println!("Correct");
-                    }
-                else 
-                    {
-                        println!("Wrong it should be = {}", info.1[i]);
-                    }
-            }
-        println!("Your Answers");
-        for i in 0..PROCESS_COUNT
-            {
-                println!("P{}", answers[i]);
-            }
-        println!("Correct Answers");
-        for i in 0..PROCESS_COUNT
-            {
-                println!("P{}", info.1[i]);
-            }
 }
 
 fn print_matrix(matrix:[[u8;RESOURCE_COUNT];PROCESS_COUNT])
