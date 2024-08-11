@@ -170,31 +170,31 @@ fn banker(
     max_needs_matrix: [[u8; RESOURCE_COUNT]; PROCESS_COUNT],
     assigned_resources_matrix: [[u8; RESOURCE_COUNT]; PROCESS_COUNT],
 ) -> (bool, Vec<u8>) {
-    let mut a_remaing: u8 = 0;
-    let mut b_remaing: u8 = 0;
-    let mut c_remaing: u8 = 0;
+    let mut a_remaining: u8 = 0;
+    let mut b_remaining: u8 = 0;
+    let mut c_remaining: u8 = 0;
     let mut remaining_needs_matrix: [[u8; RESOURCE_COUNT]; PROCESS_COUNT] =
         [[0; RESOURCE_COUNT]; PROCESS_COUNT];
     for i in 0..PROCESS_COUNT {
-        match a_remaing.checked_add(assigned_resources_matrix[i][0]) {
+        match a_remaining.checked_add(assigned_resources_matrix[i][0]) {
             Some(result) => {
-                a_remaing = result;
+                a_remaining = result;
             }
             None => {
                 return (false, vec![]);
             }
         }
-        match b_remaing.checked_add(assigned_resources_matrix[i][1]) {
+        match b_remaining.checked_add(assigned_resources_matrix[i][1]) {
             Some(result) => {
-                b_remaing = result;
+                b_remaining = result;
             }
             None => {
                 return (false, vec![]);
             }
         }
-        match c_remaing.checked_add(assigned_resources_matrix[i][2]) {
+        match c_remaining.checked_add(assigned_resources_matrix[i][2]) {
             Some(result) => {
-                c_remaing = result;
+                c_remaining = result;
             }
             None => {
                 return (false, vec![]);
@@ -204,12 +204,12 @@ fn banker(
         remaining_needs_matrix[i][1] = max_needs_matrix[i][1] - assigned_resources_matrix[i][1];
         remaining_needs_matrix[i][2] = max_needs_matrix[i][2] - assigned_resources_matrix[i][2];
     }
-    if a_remaing > a || b_remaing > b || c_remaing > c {
+    if a_remaining > a || b_remaining > b || c_remaining > c {
         return (false, vec![]);
     }
-    a_remaing = a - a_remaing;
-    b_remaing = b - b_remaing;
-    c_remaing = c - c_remaing;
+    a_remaining = a - a_remaining;
+    b_remaining = b - b_remaining;
+    c_remaining = c - c_remaining;
     let mut infinite_detection: u8 = 2;
     let mut done: [bool; PROCESS_COUNT] = [false; PROCESS_COUNT];
     let mut q: Vec<u8> = Vec::with_capacity(PROCESS_COUNT);
@@ -218,53 +218,53 @@ fn banker(
 
         for i in 0..PROCESS_COUNT {
             if !done[i] {
-                if a_remaing >= remaining_needs_matrix[i][0]
-                    && b_remaing >= remaining_needs_matrix[i][1]
-                    && c_remaing >= remaining_needs_matrix[i][2]
+                if a_remaining >= remaining_needs_matrix[i][0]
+                    && b_remaining >= remaining_needs_matrix[i][1]
+                    && c_remaining >= remaining_needs_matrix[i][2]
                 {
-                    match a_remaing.checked_sub(remaining_needs_matrix[i][0]) {
+                    match a_remaining.checked_sub(remaining_needs_matrix[i][0]) {
                         Some(result) => {
-                            a_remaing = result;
+                            a_remaining = result;
                         }
                         None => {
                             return (false, vec![]);
                         }
                     }
-                    match a_remaing.checked_add(max_needs_matrix[i][0]) {
+                    match a_remaining.checked_add(max_needs_matrix[i][0]) {
                         Some(result) => {
-                            a_remaing = result;
+                            a_remaining = result;
                         }
                         None => {
                             return (false, vec![]);
                         }
                     }
-                    match b_remaing.checked_sub(remaining_needs_matrix[i][1]) {
+                    match b_remaining.checked_sub(remaining_needs_matrix[i][1]) {
                         Some(result) => {
-                            b_remaing = result;
+                            b_remaining = result;
                         }
                         None => {
                             return (false, vec![]);
                         }
                     }
-                    match b_remaing.checked_add(max_needs_matrix[i][1]) {
+                    match b_remaining.checked_add(max_needs_matrix[i][1]) {
                         Some(result) => {
-                            b_remaing = result;
+                            b_remaining = result;
                         }
                         None => {
                             return (false, vec![]);
                         }
                     }
-                    match c_remaing.checked_sub(remaining_needs_matrix[i][2]) {
+                    match c_remaining.checked_sub(remaining_needs_matrix[i][2]) {
                         Some(result) => {
-                            c_remaing = result;
+                            c_remaining = result;
                         }
                         None => {
                             return (false, vec![]);
                         }
                     }
-                    match c_remaing.checked_add(max_needs_matrix[i][2]) {
+                    match c_remaining.checked_add(max_needs_matrix[i][2]) {
                         Some(result) => {
-                            c_remaing = result;
+                            c_remaining = result;
                         }
                         None => {
                             return (false, vec![]);
