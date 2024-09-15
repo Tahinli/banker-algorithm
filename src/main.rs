@@ -9,23 +9,18 @@ fn main() {
     let mut restart: bool = true;
     while restart {
         println!("Max A Resource");
-        let a: u8;
-        let b: u8;
-        let c: u8;
         let mut resource_input: String = String::new();
         if let Err(err_val) = io::stdin().read_line(&mut resource_input) {
             println!("Failed to Read: {}", err_val);
             return;
         }
-        match resource_input.trim().parse::<u8>() {
-            Ok(value) => {
-                a = value;
-            }
+        let a: u8 = match resource_input.trim().parse::<u8>() {
+            Ok(value) => value,
             Err(err_val) => {
                 println!("Failed to Convert: {}", err_val);
                 return;
             }
-        }
+        };
 
         println!("Max B Resource");
         let mut resource_input: String = String::new();
@@ -33,15 +28,13 @@ fn main() {
             println!("Failed to Read: {}", err_val);
             return;
         }
-        match resource_input.trim().parse::<u8>() {
-            Ok(value) => {
-                b = value;
-            }
+        let b = match resource_input.trim().parse::<u8>() {
+            Ok(value) => value,
             Err(err_val) => {
                 println!("Failed to Convert: {}", err_val);
                 return;
             }
-        }
+        };
 
         println!("Max C Resource");
         let mut resource_input: String = String::new();
@@ -49,15 +42,13 @@ fn main() {
             println!("Failed to Read: {}", err_val);
             return;
         }
-        match resource_input.trim().parse::<u8>() {
-            Ok(value) => {
-                c = value;
-            }
+        let c = match resource_input.trim().parse::<u8>() {
+            Ok(value) => value,
             Err(err_val) => {
                 println!("Failed to Convert: {}", err_val);
                 return;
             }
-        }
+        };
 
         println!("\n\tA = {}\n\tB = {}\n\tC = {}", a, b, c);
         if a == 0 || b == 0 || c == 0 {
@@ -106,25 +97,34 @@ fn main() {
         println!("Assigned Resources Matrix");
         print_matrix(assigned_resources_matrix);
         let mut answers: [u8; PROCESS_COUNT] = [0; PROCESS_COUNT];
-        for i in 0..PROCESS_COUNT {
+        for (answer, correct_answer) in answers.iter_mut().zip(&info.1) {
             println!("Which Process Should be Done Now ?");
             let mut input = String::new();
-            io::stdin().read_line(&mut input).unwrap();
-            let input: u8 = input.trim().parse().unwrap();
-            answers[i] = input;
-            if info.1[i] == input {
+            if let Err(err_val) = io::stdin().read_line(&mut input) {
+                eprintln!("Error: Reading User Input | {}", err_val);
+                return;
+            }
+            let input: u8 = match input.trim().parse() {
+                Ok(parsed) => parsed,
+                Err(err_val) => {
+                    eprintln!("Error: Converting User Input | {}", err_val);
+                    return;
+                }
+            };
+            *answer = input;
+            if *correct_answer == input {
                 println!("Correct");
             } else {
-                println!("Wrong it should be = {}", info.1[i]);
+                println!("Wrong it should be = {}", correct_answer);
             }
         }
         println!("Your Answers");
-        for i in 0..PROCESS_COUNT {
-            println!("P{}", answers[i]);
+        for answer in answers {
+            println!("P{}", answer);
         }
         println!("Correct Answers");
-        for i in 0..PROCESS_COUNT {
-            println!("P{}", info.1[i]);
+        for correct_answer in info.1 {
+            println!("P{}", correct_answer);
         }
 
         let mut resource_input: String = String::new();
@@ -147,17 +147,17 @@ fn main() {
 }
 
 fn print_matrix(matrix: [[u8; RESOURCE_COUNT]; PROCESS_COUNT]) {
-    for i in 0..5 {
+    for (i, matrix_column) in matrix.iter().enumerate() {
         print!("\n\t Process {}:   ", i);
-        for j in 0..3 {
-            if matrix[i][j] > 99 {
+        for matrix_value in matrix_column {
+            if *matrix_value > 99 {
                 print!(" ");
-            } else if matrix[i][j] > 9 {
+            } else if *matrix_value > 9 {
                 print!("  ");
             } else {
                 print!("   ");
             }
-            print!("{}", matrix[i][j]);
+            print!("{}", *matrix_value);
         }
         println!();
     }
@@ -217,63 +217,62 @@ fn banker(
         infinite_detection -= 1;
 
         for i in 0..PROCESS_COUNT {
-            if !done[i] {
-                if a_remaining >= remaining_needs_matrix[i][0]
-                    && b_remaining >= remaining_needs_matrix[i][1]
-                    && c_remaining >= remaining_needs_matrix[i][2]
-                {
-                    match a_remaining.checked_sub(remaining_needs_matrix[i][0]) {
-                        Some(result) => {
-                            a_remaining = result;
-                        }
-                        None => {
-                            return (false, vec![]);
-                        }
+            if !done[i]
+                && a_remaining >= remaining_needs_matrix[i][0]
+                && b_remaining >= remaining_needs_matrix[i][1]
+                && c_remaining >= remaining_needs_matrix[i][2]
+            {
+                match a_remaining.checked_sub(remaining_needs_matrix[i][0]) {
+                    Some(result) => {
+                        a_remaining = result;
                     }
-                    match a_remaining.checked_add(max_needs_matrix[i][0]) {
-                        Some(result) => {
-                            a_remaining = result;
-                        }
-                        None => {
-                            return (false, vec![]);
-                        }
+                    None => {
+                        return (false, vec![]);
                     }
-                    match b_remaining.checked_sub(remaining_needs_matrix[i][1]) {
-                        Some(result) => {
-                            b_remaining = result;
-                        }
-                        None => {
-                            return (false, vec![]);
-                        }
-                    }
-                    match b_remaining.checked_add(max_needs_matrix[i][1]) {
-                        Some(result) => {
-                            b_remaining = result;
-                        }
-                        None => {
-                            return (false, vec![]);
-                        }
-                    }
-                    match c_remaining.checked_sub(remaining_needs_matrix[i][2]) {
-                        Some(result) => {
-                            c_remaining = result;
-                        }
-                        None => {
-                            return (false, vec![]);
-                        }
-                    }
-                    match c_remaining.checked_add(max_needs_matrix[i][2]) {
-                        Some(result) => {
-                            c_remaining = result;
-                        }
-                        None => {
-                            return (false, vec![]);
-                        }
-                    }
-                    done[i] = true;
-                    q.push(i as u8);
-                    infinite_detection = 2;
                 }
+                match a_remaining.checked_add(max_needs_matrix[i][0]) {
+                    Some(result) => {
+                        a_remaining = result;
+                    }
+                    None => {
+                        return (false, vec![]);
+                    }
+                }
+                match b_remaining.checked_sub(remaining_needs_matrix[i][1]) {
+                    Some(result) => {
+                        b_remaining = result;
+                    }
+                    None => {
+                        return (false, vec![]);
+                    }
+                }
+                match b_remaining.checked_add(max_needs_matrix[i][1]) {
+                    Some(result) => {
+                        b_remaining = result;
+                    }
+                    None => {
+                        return (false, vec![]);
+                    }
+                }
+                match c_remaining.checked_sub(remaining_needs_matrix[i][2]) {
+                    Some(result) => {
+                        c_remaining = result;
+                    }
+                    None => {
+                        return (false, vec![]);
+                    }
+                }
+                match c_remaining.checked_add(max_needs_matrix[i][2]) {
+                    Some(result) => {
+                        c_remaining = result;
+                    }
+                    None => {
+                        return (false, vec![]);
+                    }
+                }
+                done[i] = true;
+                q.push(i as u8);
+                infinite_detection = 2;
             }
         }
         if infinite_detection == 0 {
