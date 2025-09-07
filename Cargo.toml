@@ -8,6 +8,11 @@ strip = "symbols"
 opt-level = 3
 overflow-checks = true
 lto = true
+codegen-units = 1
+panic = "abort"
+
+[lints.rust]
+unsafe_code = "forbid"
 
 [dependencies]
 rand = "0.8.5"
