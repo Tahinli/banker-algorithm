@@ -2,99 +2,95 @@ name: Rust -> Build & Test & Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
+  PROJECT_NAME: ${{ github.event.repository.name }}
 
 jobs:
   build_linux:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --release --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --release --verbose
+      - name: Run tests
+        run: cargo test --verbose
 
-    - name: Upload Linux Binary
-      uses: actions/upload-artifact@v4
-      with:
-         name: banker_algorithm_linux_x64_86
-         path: target/release/banker-algorithm
+      - name: Upload Linux Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}-linux-x64_86
+          path: target/release/${{ env.PROJECT_NAME }}
 
   build_windows:
-
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --release --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --release --verbose
+      - name: Run tests
+        run: cargo test --verbose
 
-    - name: Upload Windows Binary
-      uses: actions/upload-artifact@v4
-      with:
-         name: banker_algorithm_windows_x64_86
-         path: target/release/banker-algorithm.exe
+      - name: Upload Windows Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}-windows-x64_86
+          path: target/release/${{ env.PROJECT_NAME }}.exe
 
   build_macos:
-
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --release --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --release --verbose
+      - name: Run tests
+        run: cargo test --verbose
 
-    - name: Upload MacOS Binary
-      uses: actions/upload-artifact@v4
-      with:
-         name: banker_algorithm_macos_x64_86
-         path: target/release/banker-algorithm
+      - name: Upload MacOS Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}-macos-arm64
+          path: target/release/${{ env.PROJECT_NAME }}
 
   release:
     needs: [build_linux, build_windows, build_macos]
     runs-on: ubuntu-latest
-    permissions: 
-        contents: write
+    permissions:
+      contents: write
     steps:
+      - uses: actions/checkout@v4
+      - name: Forge a Folder
+        run: mkdir Downloads
+        working-directory: /home/runner/work/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/
 
-        - uses: actions/checkout@v4
-        - name: Forge a Folder
-          run: mkdir Downloads
-          working-directory: /home/runner/work/banker-algorithm/banker-algorithm/
+      - uses: actions/download-artifact@v4
+        name: Download
+        with:
+          path: Downloads/
 
-        - uses: actions/download-artifact@v4
-          name: Download
-          with:
-            path: Downloads/
-        
-        - name: Rename Binaries
-          run: |
-                  mv Downloads/banker_algorithm_linux_x64_86/banker-algorithm Downloads/banker_algorithm_linux_x64_86/banker-algorithm-linux_x64_86
-                  mv Downloads/banker_algorithm_windows_x64_86/banker-algorithm.exe Downloads/banker_algorithm_windows_x64_86/banker-algorithm-windows_x64_86.exe
-                  mv Downloads/banker_algorithm_macos_x64_86/banker-algorithm Downloads/banker_algorithm_macos_x64_86/banker-algorithm-macos_x64_86
+      - name: Rename Binaries
+        run: |
+          tree Downloads/
+          mv Downloads/${{ env.PROJECT_NAME }}-linux-x64_86/${{ env.PROJECT_NAME }} Downloads/${{ env.PROJECT_NAME }}-linux-x64_86/${{ env.PROJECT_NAME }}-linux-x64_86
+          mv Downloads/${{ env.PROJECT_NAME }}-windows-x64_86/${{ env.PROJECT_NAME }}.exe Downloads/${{ env.PROJECT_NAME }}-windows-x64_86/${{ env.PROJECT_NAME }}-windows-x64_86.exe
+          mv Downloads/${{ env.PROJECT_NAME }}-macos-arm64/${{ env.PROJECT_NAME }} Downloads/${{ env.PROJECT_NAME }}-macos-arm64/${{ env.PROJECT_NAME }}-macos-arm64
+      - name: Git Commit SHA
+        id: vars
+        run: |
+          calculatedSha=$(git rev-parse --short ${{ github.sha }})
+          echo "short_sha=$calculatedSha" >> $GITHUB_OUTPUT
 
-        - name: Git Commit SHA
-          id: vars
-          run: |
-                  calculatedSha=$(git rev-parse --short ${{ github.sha }})
-                  echo "short_sha=$calculatedSha" >> $GITHUB_OUTPUT
-          
-        - uses: softprops/action-gh-release@v2
-          name: Release
-          with:
-            tag_name: ${{ steps.vars.outputs.short_sha }}
-            generate_release_notes: true
-            files: |
-                      Downloads/*linux*/*banker*
-                      Downloads/*windows*/*banker*
-                      Downloads/*macos*/*banker*
-          
+      - uses: softprops/action-gh-release@v2
+        name: Release
+        with:
+          tag_name: ${{ steps.vars.outputs.short_sha }}
+          generate_release_notes: true
+          files: |
+            Downloads/*linux*/${{ env.PROJECT_NAME }}*
+            Downloads/*windows*/${{ env.PROJECT_NAME }}*
+            Downloads/*macos*/${{ env.PROJECT_NAME }}*
