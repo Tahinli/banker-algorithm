@@ -22,10 +22,16 @@ fn main() {
     let c:u8 = c.trim().parse().unwrap();
 
     println!("\n\tA = {}\n\tB = {}\n\tC = {}", a,b,c);
+    if a <= 0 || b <= 0 || c <= 0
+        {
+            println!("Exit: Zero as a Input Invalid");
+            return;
+        }
 
     let mut max_needs_matrix = [[0_u8;RESOURCE_COUNT];PROCESS_COUNT];
     let mut assigned_resources_matrix = [[0_u8;RESOURCE_COUNT];PROCESS_COUNT];
     let mut info:(bool, Vec<u8>) = (false, Vec::with_capacity(PROCESS_COUNT));
+    let mut count:u128 = 0;
     while !info.0
         {
             for i in 0..PROCESS_COUNT
@@ -71,7 +77,9 @@ fn main() {
                         }
                 }
             info = banker(a, b, c, max_needs_matrix, assigned_resources_matrix);
+            count += 1;
         }
+        println!("Count = {}", count);
         println!("Max Needs Matrix");
         print_matrix(max_needs_matrix);
         println!("Assigned Resources Matrix");
@@ -138,12 +146,46 @@ fn banker(a:u8, b:u8, c:u8, max_needs_matrix:[[u8;RESOURCE_COUNT];PROCESS_COUNT]
         let mut remaining_needs_matrix:[[u8;RESOURCE_COUNT];PROCESS_COUNT] = [[0;RESOURCE_COUNT];PROCESS_COUNT];
         for i in 0..PROCESS_COUNT
             {
-                a_remaing += assigned_resources_matrix[i][0];
-                b_remaing += assigned_resources_matrix[i][1];
-                c_remaing += assigned_resources_matrix[i][2];
+                match a_remaing.checked_add(assigned_resources_matrix[i][0])
+                    {
+                        Some(result) =>
+                            {
+                                a_remaing = result;
+                            }
+                        None =>
+                            {
+                                return (false, vec![]);
+                            }
+                    }
+                match b_remaing.checked_add(assigned_resources_matrix[i][1])
+                    {
+                        Some(result) =>
+                            {
+                                b_remaing = result;
+                            }
+                        None =>
+                            {
+                                return (false, vec![]);
+                            }
+                    }
+                match c_remaing.checked_add(assigned_resources_matrix[i][2])
+                    {
+                        Some(result) =>
+                            {
+                                c_remaing = result;
+                            }
+                        None =>
+                            {
+                                return (false, vec![]);
+                            }
+                    }
                 remaining_needs_matrix[i][0] = max_needs_matrix[i][0] - assigned_resources_matrix[i][0];
                 remaining_needs_matrix[i][1] = max_needs_matrix[i][1] - assigned_resources_matrix[i][1];
                 remaining_needs_matrix[i][2] = max_needs_matrix[i][2] - assigned_resources_matrix[i][2];
+            }
+        if a_remaing > a || b_remaing > b || c_remaing > c
+            {
+                return (false, vec![]);
             }
         a_remaing = a - a_remaing;
         b_remaing = b - b_remaing;
@@ -161,12 +203,72 @@ fn banker(a:u8, b:u8, c:u8, max_needs_matrix:[[u8;RESOURCE_COUNT];PROCESS_COUNT]
                             {
                                 if a_remaing >= remaining_needs_matrix[i][0] && b_remaing >= remaining_needs_matrix[i][1] && c_remaing >= remaining_needs_matrix[i][2]
                                     {
-                                        a_remaing -= remaining_needs_matrix[i][0];
-                                        a_remaing += max_needs_matrix[i][0];
-                                        b_remaing -= remaining_needs_matrix[i][1];
-                                        b_remaing += max_needs_matrix[i][1];
-                                        c_remaing -= remaining_needs_matrix[i][2];
-                                        c_remaing += max_needs_matrix[i][2];
+                                        match a_remaing.checked_sub(remaining_needs_matrix[i][0])
+                                            {
+                                                Some(result) =>
+                                                    {
+                                                        a_remaing = result;
+                                                    }
+                                                None =>
+                                                    {
+                                                        return (false , vec![]);
+                                                    }
+                                            }
+                                        match a_remaing.checked_add(max_needs_matrix[i][0])
+                                            {
+                                                Some(result) =>
+                                                    {
+                                                        a_remaing = result;
+                                                    }
+                                                None =>
+                                                    {
+                                                        return (false, vec![]);
+                                                    }
+                                            }
+                                        match b_remaing.checked_sub(remaining_needs_matrix[i][1])
+                                            {
+                                                Some(result) =>
+                                                    {
+                                                        b_remaing = result;
+                                                    }
+                                                None =>
+                                                    {
+                                                        return (false , vec![]);
+                                                    }
+                                            }
+                                        match b_remaing.checked_add(max_needs_matrix[i][1])
+                                            {
+                                                Some(result) =>
+                                                    {
+                                                        b_remaing = result;
+                                                    }
+                                                None =>
+                                                    {
+                                                        return (false, vec![]);
+                                                    }
+                                            }
+                                        match c_remaing.checked_sub(remaining_needs_matrix[i][2])
+                                            {
+                                                Some(result) =>
+                                                    {
+                                                        c_remaing = result;
+                                                    }
+                                                None =>
+                                                    {
+                                                        return (false , vec![]);
+                                                    }
+                                            }
+                                        match c_remaing.checked_add(max_needs_matrix[i][2])
+                                            {
+                                                Some(result) =>
+                                                    {
+                                                        c_remaing = result;
+                                                    }
+                                                None =>
+                                                    {
+                                                        return (false, vec![]);
+                                                    }
+                                            }
                                         done[i] = true;
                                         q.push(i as u8);
                                         infinite_detection = 2;
@@ -178,6 +280,5 @@ fn banker(a:u8, b:u8, c:u8, max_needs_matrix:[[u8;RESOURCE_COUNT];PROCESS_COUNT]
                         return (false, q);
                     }
             }
-        //println!("{}{}{}", a_remaing, b_remaing, c_remaing);
 		(true, q)
 	}
